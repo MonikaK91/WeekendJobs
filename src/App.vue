@@ -1,32 +1,48 @@
 <template>
   <div id="app">
-    <div id="nav">
+    <!--<div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link>
-    </div>
-    <router-view/>
+    </div> -->
+    <router-view />
   </div>
 </template>
 
-<style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+import { firebase } from "@/firebase";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import router from "@/router";
+import store from "@/store";
 
-#nav {
-  padding: 30px;
+// metoda za dobivanje trenutnog korisnika
+// postavlja se observer (promatrač) na auth objekt
+// koristeći observer osiguravamo da auth objekt nije u srednjem stanju (npr. inicijalizacija)
+const auth = getAuth();
+onAuthStateChanged(auth, (user) => {
+  const currentRoute = router.currentRoute;
 
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
+  if (user) {
+    // korisnik je prijavljen
+    console.log(user.email);
+    store.currentUser = user.email;
+    if (!currentRoute.meta.needsUser) {
+      router.replace({ name: "Pocetna" });
+      // ako trenutna ruta ne treba korisnika onda nas prebacuje na početnu stranicu
+    }
+  } else {
+    // korisnik nije prijavljen
+    console.log("No user");
+    store.currentUser = null;
+    if (currentRoute.meta.needsUser) {
+      router.replace({ name: "Signin" });
+      // ako trenutna ruta treba korisnika onda nas prebacuje na signin stranicu
     }
   }
-}
-</style>
+});
+
+export default {
+  name: "app",
+};
+</script>
+
+<style lang="scss"></style>
